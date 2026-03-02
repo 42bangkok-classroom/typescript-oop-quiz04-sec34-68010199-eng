@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { IMission } from './mission.interface';
 
@@ -67,5 +67,32 @@ export class MissionService {
     }
 
     return result;
+  }
+
+  create(body: any) {
+    const filePath = join(process.cwd(), 'data', 'missions.json');
+    const data = readFileSync(filePath, 'utf-8');
+    const missions: IMission[] = JSON.parse(data);
+
+    const lastId =
+      missions.length > 0
+        ? Math.max(...missions.map(m => Number(m.id)))
+        : 0;
+
+    const newMission = {
+      id: String(lastId + 1),
+      codename: body.codename,
+      status: 'ACTIVE',
+      targetName: body.targetName,
+      riskLevel: body.riskLevel,
+      startDate: body.startDate,
+      endDate: null
+    };
+
+    missions.push(newMission);
+
+    writeFileSync(filePath, JSON.stringify(missions, null, 2));
+
+    return newMission;
   }
 }
