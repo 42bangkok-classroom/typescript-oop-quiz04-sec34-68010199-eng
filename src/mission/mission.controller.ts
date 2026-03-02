@@ -1,13 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  Body,
-} from '@nestjs/common'
-import { MissionService } from './mission.service'
-import { Mission } from './mission.interface'
+import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import { MissionService } from './mission.service';
+import type { Mission } from './mission.interface';
 
 @Controller('missions')
 export class MissionController {
@@ -15,29 +8,29 @@ export class MissionController {
 
   @Get()
   findAll(): Mission[] {
-    return this.missionService.findAll()
+    return this.missionService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string): Mission {
-    return this.missionService.findOne(id)
+    return this.missionService.findOne(id);
   }
 
   @Post()
   create(
     @Body()
     body: {
-      codename: string
-      riskLevel: string
-      targetName: string
-      startDate: string
+      codename: string;
+      riskLevel: string;
+      targetName: string;
+      startDate: string;
     },
   ): Mission {
-    return this.missionService.create(body)
+    return this.missionService.create(body);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string): { message: string } {
-    return this.missionService.remove(id)
+    return this.missionService.remove(id);
   }
 }
