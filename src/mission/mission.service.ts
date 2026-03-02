@@ -1,79 +1,69 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { readFileSync, writeFileSync } from 'fs';
-import { Mission } from './mission.interface';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import * as fs from "fs";
+import * as path from "path";
+import { Mission } from "./mission.interface";
 
 @Injectable()
 export class MissionService {
-  private filePath = 'data/missions.json';
+  private filePath = path.join(process.cwd(), "data", "missions.json");
 
-  private readData(): Mission[] {
-    const data = readFileSync(this.filePath, 'utf-8');
-    return JSON.parse(data) as Mission[];
+  private readMissions(): Mission[] {
+    const data = fs.readFileSync(this.filePath, "utf-8");
+    return JSON.parse(data);
   }
 
-  private writeData(data: Mission[]): void {
-    writeFileSync(this.filePath, JSON.stringify(data, null, 2));
+  getSummary() {
+    const missions = this.readMissions();
+
+    const summary: Record<string, number> = {};
+
+    missions.forEach((m) => {
+      summary[m.status] = (summary[m.status] || 0) + 1;
+    });
+
+    return summary;
   }
 
-  findAll(): Mission[] {
-    return this.readData();
+  findAll(): any[] {
+    const missions = this.readMissions();
+
+    return missions.map((m) => {
+      let durationDays = -1;
+
+      if (m.endDate !== null) {
+        const start = new Date(m.startDate).getTime();
+        const end = new Date(m.endDate).getTime();
+        durationDays = Math.ceil(
+          (end - start) / (1000 * 60 * 60 * 24)
+        );
+      }
+
+      return {
+        ...m,
+        durationDays,
+      };
+    });
   }
 
-  findOne(id: string): Mission {
-    const missions = this.readData();
+  findOne(id: string, clearance: string = "STANDARD"): Mission {
+    const missions = this.readMissions();
+
     const mission = missions.find((m) => m.id === id);
 
     if (!mission) {
       throw new NotFoundException();
     }
 
-    return mission;
-  }
-
-  create(body: {
-    codename: string;
-    riskLevel: string;
-    targetName: string;
-    startDate: string;
-  }): Mission {
-    const missions = this.readData();
-
-    const newId =
-      missions.length > 0
-        ? Math.max(...missions.map((m) => Number(m.id))) + 1
-        : 1;
-
-    const newMission: Mission = {
-      id: String(newId),
-      codename: body.codename,
-      status: 'ACTIVE',
-      riskLevel: body.riskLevel,
-      targetName: body.targetName,
-      startDate: body.startDate,
-      endDate: null,
-    };
-
-    missions.push(newMission);
-    this.writeData(missions);
-
-    return newMission;
-  }
-
-  remove(id: string): { message: string } {
-    const missions = this.readData();
-
-    const index = missions.findIndex((m) => m.id === id);
-
-    if (index === -1) {
-      throw new NotFoundException();
+    if (
+      mission.riskLevel === "HIGH" &&
+      clearance !== "TOP_SECRET"
+    ) {
+      return {
+        ...mission,
+        targetName: "***REDACTED***",
+      };
     }
 
-    missions.splice(index, 1);
-
-    this.writeData(missions);
-
-    return {
-      message: `Mission ID ${id} has been successfully deleted.`,
-    };
+    return mission;
   }
 }
