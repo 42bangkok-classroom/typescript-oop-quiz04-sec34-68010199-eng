@@ -54,7 +54,7 @@ export class MissionService {
     const mission = missions.find(m => m.id === id);
 
     if (!mission) {
-      throw new NotFoundException('Mission not found');
+      throw new NotFoundException('Not Found');
     }
 
     const result = { ...mission };
@@ -94,5 +94,25 @@ export class MissionService {
     writeFileSync(filePath, JSON.stringify(missions, null, 2));
 
     return newMission;
+  }
+
+  remove(id: string) {
+    const filePath = join(process.cwd(), 'data', 'missions.json');
+    const data = readFileSync(filePath, 'utf-8');
+    const missions: IMission[] = JSON.parse(data);
+
+    const index = missions.findIndex(m => m.id === id);
+
+    if (index === -1) {
+      throw new NotFoundException('Not Found');
+    }
+
+    missions.splice(index, 1);
+
+    writeFileSync(filePath, JSON.stringify(missions, null, 2));
+
+    return {
+      message: `Mission ID ${id} has been successfully deleted.`
+    };
   }
 }

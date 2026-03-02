@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Query, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Post,
+  Body,
+  Delete
+} from '@nestjs/common';
 import { MissionService } from './mission.service';
 
 @Controller('missions')
@@ -26,5 +34,10 @@ export class MissionController {
   @Post()
   create(@Body() body: any) {
     return this.missionService.create(body);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.missionService.remove(id);
   }
 }
